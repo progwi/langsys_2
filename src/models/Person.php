@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="person")
  */
-class Person
+class Person implements JsonSerializable
 {
 	/**
 	 * @ORM\Id
@@ -24,7 +24,7 @@ class Person
 	 * @ORM\Column(type="string")
 	 */
 	private $lastName;
-	
+
 	/**
 	 * @ORM\Column(type="float")
 	 */
@@ -36,16 +36,22 @@ class Person
 	private $birthDate;
 
 	/**
-	 * @ORM\OneToOne(targetEntity="User")
+	 * @ORM\OneToOne(targetEntity="User", cascade={"remove"})
 	 */
 	private $user;
 
-	public function __construct($firstName, $lastName)
-	{
-		$this->firstName = $firstName;
-		$this->lastName = $lastName;
-		$this->height = 1.80;
-		$this->birthDate = new DateTime();
+	public function __construct(
+		$data = [
+			"firstName"	=> "",
+			"lastName"	=> "",
+			"height"	=> 0,
+			"birthDate"	=> ""
+		]
+	) {
+		$this->firstName = $data["firstName"];
+		$this->lastName = $data["lastName"];
+		$this->height = $data["height"] ?? 0;
+		$this->birthDate = $data["birthDate"] ?? new DateTime();
 	}
 
 	public function getId()
@@ -78,9 +84,25 @@ class Person
 		$this->lastName = $lastName;
 	}
 
+	public function getFullName()
+	{
+		return strtoupper($this->lastName) . ", " . $this->firstName;
+	}
+
 	public function setUser(User $user)
 	{
 		$this->user = $user;
+	}
+
+	public function jsonSerialize()
+	{
+		return [
+			"id"		=> $this->id,
+			"firstName"	=> $this->firstName,
+			"lastName"	=> $this->lastName,
+			"height"	=> $this->height,
+			"birthDate"	=> $this->birthDate->format("Y-m-d")
+		];
 	}
 
 	/*

@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @ORM\Entity
  * @ORM\Table(name="user")
  */
-class User
+class User implements JsonSerializable
 {
 	/**
 	 * @ORM\Id
@@ -36,7 +36,7 @@ class User
 	private $password;
 
 	/**
-	 * @ORM\OneToOne(targetEntity="Person")
+	 * @ORM\OneToOne(targetEntity="Person", cascade={"remove"})
 	 * @var Person
 	 */
 	private $person;
@@ -47,11 +47,16 @@ class User
 	 */
 	private $roles;
 
-	public function __construct($name, $email, $password)
-	{
-		$this->name = $name;
-		$this->email = $email;
-		$this->password = $password;
+	public function __construct(
+		$data = [
+			"name"		=> "",
+			"email"		=> "",
+			"password"	=> ""
+		]
+	) {
+		$this->name = $data["name"];
+		$this->email = $data["email"];
+		$this->password = $data["password"];
 	}
 
 	public function getId()
@@ -89,6 +94,11 @@ class User
 		$this->roles[] = $role;
 	}
 
+	public function getRoles()
+	{
+		return $this->roles;
+	}
+
 	public function setPerson(Person $person)
 	{
 		$this->person = $person;
@@ -100,12 +110,27 @@ class User
 		return $this->person;
 	}
 
-	/*
+	public function __toString()
+	{
+		return $this->name . " (" . $this->email . ")";
+	}
+
+	public function jsonSerialize()
+	{
+		return [
+			"id"		=> $this->id,
+			"name"	=> $this->name,
+			"email"	=> $this->email,
+			"person"	=> $this->person,
+			"maxRole"	=> $this->maxRole()->getName()
+		];
+	}
+
 	public function maxRole()
 	{
 		$max = 0;
 		$maxRole = null;
-		foreach ($this->roles as $role) {
+		foreach ($this->getRoles() as $role) {
 			if ($role->getId() > $max) {
 				$max = $role->getId();
 				$maxRole = $role;
@@ -113,5 +138,4 @@ class User
 		}
 		return $maxRole;
 	}
-	*/
 }
